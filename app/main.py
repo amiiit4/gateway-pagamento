@@ -1,9 +1,20 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import CriarPagamentoRequest, CriarPagamentoResponse
 from app.mercado_pago_client import criar_preferencia, buscar_pagamento
 from app import storage
 
 app = FastAPI(title="Gateway de Pagamento (Mercado Pago)")
+
+# Permite que a página de vitrine (loja.html) chame essa API mesmo se
+# estiver hospedada em outro endereço/domínio no futuro.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/pagamentos", response_model=CriarPagamentoResponse)
@@ -80,3 +91,9 @@ def consultar_status(pedido_id: str):
 @app.get("/")
 def raiz():
     return {"status": "ok", "servico": "gateway de pagamento com Mercado Pago"}
+
+
+@app.get("/loja")
+def loja():
+    """Serve a página de vitrine/checkout (loja.html)."""
+    return FileResponse("loja.html")

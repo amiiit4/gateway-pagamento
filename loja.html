@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Loja</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #f4f4f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    max-width: 380px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .card-image {
+    width: 100%;
+    height: 220px;
+    background: linear-gradient(135deg, #6C5CE7, #00B894);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+  }
+  .card-body { padding: 24px; }
+  .card-body h1 { font-size: 20px; margin-bottom: 8px; color: #1a1a1a; }
+  .card-body p.desc { color: #666; font-size: 14px; margin-bottom: 20px; }
+  .price { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 24px; }
+  .price span { font-size: 14px; color: #888; font-weight: 400; }
+  button {
+    width: 100%;
+    padding: 14px;
+    background: #00B894;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #00976f; }
+  button:disabled { background: #ccc; cursor: not-allowed; }
+  .erro { color: #e74c3c; font-size: 13px; margin-top: 12px; text-align: center; display: none; }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="card-image">🛍️</div>
+    <div class="card-body">
+      <h1>Camiseta Preta P</h1>
+      <p class="desc">Camiseta 100% algodão, corte reto, tamanho P.</p>
+      <div class="price">R$ 79,90 <span>à vista</span></div>
+      <button id="btnComprar">Comprar agora</button>
+      <p class="erro" id="msgErro">Não foi possível iniciar o pagamento. Tente novamente.</p>
+    </div>
+  </div>
+
+  <script>
+    // Troque essa URL pela URL do seu gateway hospedado no Render
+    const API_URL = "https://gateway-pagamento-6ss2.onrender.com";
+
+    document.getElementById("btnComprar").addEventListener("click", async () => {
+      const botao = document.getElementById("btnComprar");
+      const msgErro = document.getElementById("msgErro");
+      botao.disabled = true;
+      botao.textContent = "Aguarde...";
+      msgErro.style.display = "none";
+
+      // Gera um pedido_id único a cada compra
+      const pedidoId = "pedido-" + Date.now();
+
+      try {
+        const resposta = await fetch(`${API_URL}/pagamentos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pedido_id: pedidoId,
+            itens: [
+              {
+                titulo: "Camiseta Preta P",
+                quantidade: 1,
+                preco_unitario: 79.90
+              }
+            ],
+            email_comprador: "cliente@exemplo.com"
+          })
+        });
+
+        if (!resposta.ok) throw new Error("Falha ao criar pagamento");
+
+        const dados = await resposta.json();
+        // Redireciona o cliente pro checkout do Mercado Pago
+        window.location.href = dados.link_pagamento;
+
+      } catch (erro) {
+        msgErro.style.display = "block";
+        botao.disabled = false;
+        botao.textContent = "Comprar agora";
+      }
+    });
+  </script>
+
+</body>
+</html>
